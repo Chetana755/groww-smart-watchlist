@@ -1,3 +1,16 @@
+Next: **fix your GitHub README.** I checked the public repo, and it is still showing the old Phase 0 description:
+
+> “This repository currently contains Phase 0 foundations only…”
+
+That's now completely wrong because your full application is implemented. ([GitHub][1])
+
+[Open your GitHub repository](https://github.com/Chetana755/groww-smart-watchlist?utm_source=chatgpt.com)
+
+## 1. Replace `README.md`
+
+Use this:
+
+````markdown
 # Smart Market Watchlist
 
 > **A normal watchlist tells you what your stocks are doing. Smart Watchlist tells you what you missed.**
@@ -76,8 +89,11 @@ NEW_UPDATE occurs
 TCS +5.5%
     ↓
 1 NEW meaningful change
+````
 
+## Architecture
 
+```text
 React + TypeScript + Vite
             |
         Typed API
@@ -91,3 +107,155 @@ React + TypeScript + Vite
     +-------+-------+
             |
        PostgreSQL
+```
+
+### Backend structure
+
+* `api/` — HTTP endpoints and request/response handling
+* `services/` — application use cases
+* `domain/` — deterministic attention and business logic
+* `providers/` — market-data provider abstraction and demo provider
+* `repositories/` — persistence operations
+* `models/` — SQLAlchemy models
+* `schemas/` — Pydantic API contracts
+
+The attention engine is deterministic and does not rely on an LLM to decide whether a market movement is significant.
+
+## Demo Market Feed
+
+The prototype uses deterministic market-data scenarios so that the same behavior can be reproduced during evaluation.
+
+Available scenarios include:
+
+* Normal day
+* Company move
+* Sector move
+* Unusual volume
+* Mixed signals
+* Stale data
+* Conflicting data
+* NEW_UPDATE
+
+The architecture separates the market-data provider from the attention engine, allowing a licensed real-time market-data provider to be integrated without changing the core decision logic.
+
+## Tech Stack
+
+### Frontend
+
+* React
+* TypeScript
+* Vite
+
+### Backend
+
+* Python
+* FastAPI
+* Pydantic
+* SQLAlchemy
+* Alembic
+
+### Database
+
+* PostgreSQL
+
+### Infrastructure
+
+* Docker
+* Docker Compose
+* Railway
+* Neon PostgreSQL
+
+## Running locally
+
+### Prerequisites
+
+* Docker Desktop
+* Docker Compose
+
+### Start the application
+
+```bash
+git clone https://github.com/Chetana755/groww-smart-watchlist.git
+cd groww-smart-watchlist
+docker compose up --build
+```
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+Backend:
+
+```text
+http://localhost:8000
+```
+
+Health check:
+
+```text
+http://localhost:8000/api/v1/health
+```
+
+## Production Demo
+
+Frontend:
+
+[https://groww-smart-watchlist-production-ae45.up.railway.app/](https://groww-smart-watchlist-production-ae45.up.railway.app/)
+
+Backend:
+
+[https://groww-smart-watchlist-production.up.railway.app/](https://groww-smart-watchlist-production.up.railway.app/)
+
+## Testing
+
+Backend:
+
+```bash
+cd backend
+pytest
+ruff check .
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run typecheck
+npm run build
+```
+
+## Project Documentation
+
+* `docs/architecture.md` — system architecture and boundaries
+* `docs/api-contract.md` — API conventions
+* `docs/data-model.md` — persistence model
+* `docs/implementation-plan.md` — implementation plan
+
+## Hackathon
+
+Built for **CODE 2026 — Groww Smart Market Watchlist Challenge**.
+
+The focus is on:
+
+* Product interpretation
+* Engineering depth
+* Resilience and edge cases
+* Code quality and simplicity
+* Originality and thoughtful design
+
+````
+
+## 2. Commit it
+
+After saving `README.md`:
+
+```bash
+git add README.md
+git commit -m "docs: update README for hackathon release"
+git push
+````
+
+[1]: https://github.com/Chetana755/groww-smart-watchlist "GitHub - Chetana755/groww-smart-watchlist: Smart Market Watchlist — a context-aware watchlist that tells users what changed and what matters. · GitHub"
