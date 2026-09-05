@@ -1,53 +1,93 @@
 # Smart Market Watchlist
 
-An evidence-first smart watchlist for understanding what materially changed since a user last checked. This repository currently contains Phase 0 foundations only: no watchlist, market-data, attention, event, thesis, AI, or dashboard features have been implemented.
+> **A normal watchlist tells you what your stocks are doing. Smart Watchlist tells you what you missed.**
 
-## Prerequisites
+Smart Market Watchlist is a context-aware market watchlist designed to reduce attention overload.
 
-- Docker Desktop with Docker Compose v2, or Python 3.12+ and Node.js 22+
+Instead of showing every price movement, it identifies **meaningful changes**, explains why they matter, remembers what the user has already seen, and surfaces only genuinely new developments.
 
-## Start with Docker
+## What makes it different?
 
-```powershell
-Copy-Item .env.example .env
-docker compose up --build
-```
+Traditional watchlists answer:
 
-The API health check is available at `http://localhost:8000/api/v1/health`. The Vite development server is available at `http://localhost:5173`.
+> "How are my stocks doing?"
 
-## Local commands without Docker
+Smart Watchlist answers:
 
-```powershell
-Copy-Item .env.example .env
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
-pytest
-ruff check .
-ruff format --check .
+> **"What changed since I last checked, why did it change, and does it matter?"**
 
-cd ..\frontend
-npm install
-npm run test -- --run
-npm run lint
-npm run typecheck
-npm run build
-```
+### Core capabilities
 
-Set `DATABASE_URL` to a locally reachable PostgreSQL instance for Alembic commands. Container-local `DATABASE_URL` from `.env.example` uses the Compose service hostname.
+- **Meaningful-change detection** using a deterministic attention engine
+- **Evidence-first explanations** for every important movement
+- **Last-seen state** to distinguish new changes from already-seen changes
+- **Market and sector context** for relative movement
+- **Volume anomaly detection**
+- **Corporate-event context**
+- **Data-quality awareness** for fresh, delayed, stale and conflicting data
+- **Persistent watchlists** with add, remove and reorder support
+- **Deterministic demo scenarios** for reproducible evaluation
+- **Provider abstraction** designed for integration with real market-data providers
 
-## Migration commands
+## Example
 
-```powershell
-cd backend
-alembic upgrade head
-alembic revision --autogenerate -m "describe change"
-```
+A company moves +5.5%.
 
-## Documentation
+Instead of simply displaying:
 
-- `docs/architecture.md` — boundaries and system architecture
-- `docs/api-contract.md` — API conventions and planned contracts
-- `docs/data-model.md` — planned persistence model
-- `docs/implementation-plan.md` — approved 36-hour delivery sequence
+`TCS +5.5%`
+
+the system explains:
+
+- Price moved +5.5%
+- Volume is 3.2× average
+- Moved 5.1% relative to sector
+- Relevant company event detected
+
+The attention engine combines these signals to determine whether the movement deserves the user's attention.
+
+## "What did I miss?"
+
+The system maintains a `last_market_check_at` timestamp.
+
+This allows it to distinguish between:
+
+- **Important but already seen**
+- **Important and NEW**
+- **No meaningful change**
+
+For example:
+
+```text
+Company Move
+    ↓
+TCS +4.2%
+    ↓
+User checks the dashboard
+    ↓
+Marked as seen
+    ↓
+Refresh
+    ↓
+0 new meaningful changes
+    ↓
+NEW_UPDATE occurs
+    ↓
+TCS +5.5%
+    ↓
+1 NEW meaningful change
+
+
+React + TypeScript + Vite
+            |
+        Typed API
+            |
+          FastAPI
+            |
+    +-------+-------+
+    |       |       |
+  Domain Services Providers
+    |       |       |
+    +-------+-------+
+            |
+       PostgreSQL
