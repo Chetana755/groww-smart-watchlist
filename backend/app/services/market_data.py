@@ -131,9 +131,19 @@ class MarketDataService:
     def scenarios(self) -> list[DemoScenarioResponse]:
         return scenario_catalog()
 
-    def select_scenario(self, user_id: UUID, scenario: DemoScenario) -> DemoScenarioResponse:
+    def select_scenario(
+        self,
+        session: Session,
+        user_id: UUID,
+        scenario: DemoScenario,
+    ) -> DemoScenarioResponse:
         self.scenario_store.set(user_id, scenario)
-        return next(item for item in self.scenarios() if item.scenario == scenario)
+    
+        user = self._user(session, user_id)
+        user.last_market_check_at = None
+        session.commit()
+
+        return next(item for item in self.scenarios() if item.scenario == scenario))
 
     def _user(self, session: Session, user_id: UUID) -> User:
         user = self.users.get_by_id(session, user_id)
