@@ -26,5 +26,10 @@ class User(Base):
     last_market_check_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Persist the demo scenario so a backend restart/redeploy does not reset
+    # the market view to NORMAL_DAY.
+    demo_scenario: Mapped[str] = mapped_column(
+        String(40), nullable=False, server_default="NORMAL_DAY"
+    )
 
     watchlists: Mapped[list[Watchlist]] = relationship(back_populates="user")

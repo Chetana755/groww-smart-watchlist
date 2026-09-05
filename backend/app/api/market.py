@@ -44,43 +44,32 @@ async def get_attention(
     session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
 ) -> list[AttentionResponse]:
-    return await service.attention(
-        session,
-        current_user.id,
-        symbols_from_query(symbols),
-    )
+    return await service.attention(session, current_user.id, symbols_from_query(symbols))
 
 
 @router.get("/quotes", response_model=list[MarketSnapshotInput])
 async def get_quotes(
     symbols: str = Query(min_length=1, max_length=500),
+    session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
 ) -> list[MarketSnapshotInput]:
-    return await service.quotes(
-        current_user.id,
-        symbols_from_query(symbols),
-    )
+    return await service.quotes(session, current_user.id, symbols_from_query(symbols))
 
 
 @router.get("/context", response_model=list[MarketContextInput])
 async def get_context(
     symbols: str = Query(min_length=1, max_length=500),
+    session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
 ) -> list[MarketContextInput]:
-    return await service.context(
-        current_user.id,
-        symbols_from_query(symbols),
-    )
+    return await service.context(session, current_user.id, symbols_from_query(symbols))
 
 
 @router.get("/events", response_model=list[CanonicalMarketEvent])
 async def get_events(
     symbols: str = Query(min_length=1, max_length=500),
     since: datetime | None = None,
+    session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
 ) -> list[CanonicalMarketEvent]:
-    return await service.events(
-        current_user.id,
-        symbols_from_query(symbols),
-        since,
-    )
+    return await service.events(session, current_user.id, symbols_from_query(symbols), since)
