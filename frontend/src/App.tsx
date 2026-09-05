@@ -352,14 +352,20 @@ function App() {
 
       <section
         className="scenario-control"
-        aria-label="Demo scenario"
+        aria-label="Explore market conditions"
       >
-        <span className="demo-feed-label">
-          Demo market feed
-        </span>
+        <div className="scenario-copy">
+          <span className="demo-feed-label">
+            Demo environment
+          </span>
+
+          <span className="scenario-title">
+            Explore market conditions
+          </span>
+        </div>
 
         <label htmlFor="scenario-select">
-          Scenario
+          Explore
         </label>
 
         <select
@@ -388,6 +394,10 @@ function App() {
       <section className="hero">
         <div>
           <h1>What did I miss?</h1>
+
+          <p className="hero-description">
+            The changes worth knowing about since your last check.
+          </p>
         </div>
 
         <div className="hero-stat">
@@ -408,9 +418,7 @@ function App() {
               onClick={() => void handleMarkAllSeen()}
               disabled={markingSeen}
             >
-              {markingSeen
-                ? "Saving..."
-                : "Mark all as seen"}
+              {markingSeen ? "Saving..." : "Mark all as seen"}
             </button>
           )}
         </div>
@@ -422,8 +430,7 @@ function App() {
             <h2>Worth your attention</h2>
 
             <p>
-              Changes supported by the strongest current
-              evidence.
+              Changes supported by the strongest current evidence.
             </p>
           </div>
         </div>
@@ -432,10 +439,10 @@ function App() {
           <div className="empty-card">
             <div className="empty-icon">✓</div>
 
-            <h3>Nothing meaningful changed</h3>
+            <h3>Nothing needs your attention</h3>
 
             <p>
-              You&apos;re caught up with your watchlist.
+              No significant changes have appeared since your last check.
             </p>
           </div>
         ) : (
@@ -449,9 +456,7 @@ function App() {
                 <button
                   key={item.symbol}
                   className="attention-card"
-                  onClick={() =>
-                    setSelectedSymbol(item.symbol)
-                  }
+                  onClick={() => setSelectedSymbol(item.symbol)}
                 >
                   <div className="card-top">
                     <div>
@@ -820,20 +825,21 @@ function App() {
 
           <span>
             {Math.max(
-              quotes.length -
-                newMeaningfulChanges.length,
+              quotes.length - meaningfulChanges.length,
               0,
             )}{" "}
-            stocks had no meaningful new change.
+            stocks have no significant change right now.
           </span>
         </div>
       </section>
 
       <footer className="data-footer">
-        <span>● Demo market feed</span>
+        <span>
+          Demo environment · Deterministic market data
+        </span>
 
         <span>
-          Data designed for hackathon demonstration
+          Built for the Groww Code 2026 hackathon
         </span>
       </footer>
 
