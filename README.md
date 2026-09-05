@@ -1,16 +1,4 @@
-Next: **fix your GitHub README.** I checked the public repo, and it is still showing the old Phase 0 description:
 
-> “This repository currently contains Phase 0 foundations only…”
-
-That's now completely wrong because your full application is implemented. ([GitHub][1])
-
-[Open your GitHub repository](https://github.com/Chetana755/groww-smart-watchlist?utm_source=chatgpt.com)
-
-## 1. Replace `README.md`
-
-Use this:
-
-````markdown
 # Smart Market Watchlist
 
 > **A normal watchlist tells you what your stocks are doing. Smart Watchlist tells you what you missed.**
@@ -256,6 +244,4 @@ After saving `README.md`:
 git add README.md
 git commit -m "docs: update README for hackathon release"
 git push
-````
 
-[1]: https://github.com/Chetana755/groww-smart-watchlist "GitHub - Chetana755/groww-smart-watchlist: Smart Market Watchlist — a context-aware watchlist that tells users what changed and what matters. · GitHub"
