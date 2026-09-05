@@ -26,6 +26,8 @@ Integration: frontend renders server-created ids and performs optimistic UI only
 
 Exit tests: migration-up test; repository tests for ownership, duplicate prevention and reorder; API CRUD/validation tests; frontend tests for add/remove/rename/reorder behavior.
 
+Implementation note: Phase 1 is complete with migration `20260904_01`. It includes the deterministic demo-user resolver as a replaceable API dependency, the normalized instrument catalog, CRUD/item APIs, and the focused watchlist-management interface only. No market-intelligence Phase 2+ functionality is included.
+
 ## Phase 2 — Market-data contracts and deterministic scenarios (hours 7–11)
 
 Create: `backend/app/providers/base.py`, `backend/app/providers/demo.py`, `backend/app/providers/real.py`, `backend/app/providers/fixtures/*.json`, `backend/app/schemas/market_data.py`, `backend/app/models/{market_snapshot,market_context_snapshot,market_event}.py`, `backend/app/repositories/market_data.py`, `backend/app/services/demo.py`, `backend/app/api/demo.py`; frontend `features/demo/ScenarioSelector.tsx`. Market-event normalization includes cross-source deduplication before event persistence and before attention scoring.

@@ -4,8 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.demo import router as demo_router
 from app.api.health import router as health_router
+from app.api.instruments import router as instruments_router
+from app.api.market import router as market_router
+from app.api.watchlists import router as watchlists_router
 from app.config import get_settings
+from app.domain.errors import DomainError
 from app.schemas.common import ApiErrorEnvelope
 
 settings = get_settings()
@@ -47,9 +52,18 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError) 
     )
 
 
+@app.exception_handler(DomainError)
+async def domain_exception_handler(_: Request, exc: DomainError) -> JSONResponse:
+    return error_response(exc.status_code, exc.code, str(exc))
+
+
 @app.exception_handler(Exception)
 async def unexpected_exception_handler(_: Request, __: Exception) -> JSONResponse:
     return error_response(500, "internal_error", "An unexpected server error occurred.")
 
 
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(demo_router, prefix="/api/v1")
+app.include_router(instruments_router, prefix="/api/v1")
+app.include_router(market_router, prefix="/api/v1")
+app.include_router(watchlists_router, prefix="/api/v1")

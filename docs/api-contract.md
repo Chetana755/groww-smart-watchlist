@@ -45,6 +45,26 @@ interface AttentionResult {
 
 `WatchlistOverview` contains watchlist metadata, `needsAttention`, `changed`, `unchanged`, `dataHealth`, and `generatedAt`. Each stock item includes current quote values, its `AttentionResult`, and optional related-watchlist symbols.
 
+## Implemented Phase 1 contracts
+
+`GET /watchlists` returns `WatchlistSummary[]`; a summary has `id`, `name`, `createdAt`, `updatedAt`, and `itemCount`. `POST /watchlists` accepts `{ "name": string }` and returns a full `Watchlist` with an empty `items` list. `GET`/`PATCH`/`DELETE /watchlists/{watchlistId}` read, rename, or delete only the current user's resource. Delete returns `204`.
+
+`POST /watchlists/{watchlistId}/items` accepts `{ "symbol": string }` and returns the new ordered item. `GET /watchlists/{watchlistId}/items` returns the ordered item list. `DELETE /watchlists/{watchlistId}/items/{symbol}` returns `204`. `PUT /watchlists/{watchlistId}/items/reorder` accepts `{ "symbols": string[] }`; the symbols must be an exact, duplicate-free permutation of the existing items and positions are reassigned from 1.
+
+An item contains `id`, `position`, `createdAt`, and an `instrument`; an instrument has `id`, `symbol`, `companyName`, `exchange`, `sector`, and `industry`. `GET /instruments?query=` searches the catalog by symbol or company name and returns at most 20 alphabetically ordered records.
+
+Error behavior: missing or inaccessible watchlists/instruments return `404` without exposing ownership; duplicate watchlist items return `409` with `error.code = "conflict"`; invalid reorders return `422` with `error.code = "invalid_reorder"`; malformed request data returns the shared `validation_error` envelope.
+
+## Implemented Phase 3 contracts
+
+`POST /market/mark-checked` records the current user's market-check time and returns `{ "lastSeenAt": "<ISO-8601 UTC timestamp>" }`. `GET /market/last-seen` returns that persisted state using the same response shape; `lastSeenAt` is `null` until the user has marked the market as checked.
+
+## Implemented Phase 4 contracts
+
+`GET /demo/scenarios` returns the deterministic scenario catalog, and `POST /demo/scenario` accepts `{ "scenario": "COMPANY_MOVE" }` to select the process-local scenario for the current demo user. Market quote, context, event, and attention endpoints then use that selected provider state.
+
+`GET /market/attention` retains its score, level, reason, and evidence fields and now includes `isNew` and `latestRelevantAt`. `isNew` is true only for high/moderate attention whose latest provider observation or relevant event timestamp is later than `lastSeenAt`; when `lastSeenAt` is null, current meaningful changes are new. Stale and conflicting provider timestamps/statuses are returned unchanged.
+
 ## Watchlist stocks
 
 | Method and path | Request | Success response |
@@ -68,9 +88,9 @@ interface AttentionResult {
 | Method and path | Request | Success response |
 |---|---|---|
 | `GET /demo/scenarios` | — | Available scenario ids, names, and descriptions. |
-| `POST /demo/scenario` | `{ scenarioId }` | Active scenario descriptor. |
+| `POST /demo/scenario` | `{ scenario: DemoScenario }` | Active scenario descriptor. |
 
-The demo endpoint is enabled only in development/demo mode. Valid ids are `normal`, `company_move`, `sector_move`, `volume_anomaly`, `conflicting`, `stale`, and `provider_failure`.
+Valid scenario values are `NORMAL_DAY`, `COMPANY_MOVE`, `SECTOR_MOVE`, `UNUSUAL_VOLUME`, `MIXED_SIGNALS`, `STALE_DATA`, `CONFLICTING_DATA`, and `NEW_UPDATE`. `NEW_UPDATE` supplies a fixed follow-up TCS observation at `2030-01-02T10:00:00Z`, allowing deterministic last-seen demonstrations after the baseline observation.
 
 ## Semantics needed by the frontend
 

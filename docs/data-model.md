@@ -8,7 +8,7 @@ All tables use UUID primary keys, timezone-aware UTC timestamps, and `created_at
 
 | Entity | Essential fields | Relationships and constraints |
 |---|---|---|
-| `users` | `id`, `display_name`, `email` nullable | Owns watchlists. A seeded demo user is acceptable before authentication. |
+| `users` | `id`, `display_name`, `email` nullable, `last_market_check_at` nullable | Owns watchlists. `last_market_check_at` records the user's most recent successful market check. A seeded demo user is acceptable before authentication. |
 | `watchlists` | `id`, `user_id`, `name`, `sort_order` | Belongs to one user; unique `(user_id, name)`. |
 | `watchlist_stocks` | `id`, `watchlist_id`, `symbol`, `sort_order`, `watch_reason`, `thesis_text`, `reason_tags` | Belongs to one watchlist; unique `(watchlist_id, symbol)`. |
 | `market_snapshots` | `id`, `symbol`, `price`, `previous_close`, `volume`, `normal_volume`, `sector`, `provider`, `observed_at`, `status`, `raw_metadata` | Immutable normalized observation; index `(symbol, observed_at DESC)`. |
@@ -51,3 +51,10 @@ StockRelationship: Symbol -- relationship --> Symbol
 4. Advance `last_seen_states` only in the successful refresh transaction after all comparison output has been recorded.
 5. Provider errors and missing records are persisted as status/metadata only when a valid normalized record exists; missing numerical values remain absent, never zero-filled.
 6. Event ingestion creates a normalized cross-source `dedupe_key` from source identifiers when available; otherwise it uses normalized event type, affected symbols, occurrence-time window, and a content fingerprint. Multiple reports matching one key enrich corroboration/source provenance but produce one canonical market event and one meaningful-event contribution.
+
+## Implemented Phase 1 invariants
+
+- `watchlists.user_id` is a foreign key to `users`; all API access scopes a lookup by both identifiers.
+- `watchlist_items.watchlist_id` and `watchlist_items.instrument_id` are foreign keys with a database-level unique constraint `uq_watchlist_item_instrument`. A symbol cannot occur twice in one watchlist even under concurrent requests.
+- Item `position` is explicit, one-based, and assigned at the end of the list on insertion. Reorder accepts only a full permutation of existing symbols, then updates all positions in one committed transaction.
+- The `instruments` table is seeded through migration `20260904_01` with the deterministic Indian-equity demo catalog. API handlers access it through `InstrumentRepository`, not hard-coded values.
