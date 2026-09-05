@@ -93,6 +93,7 @@ function App() {
   const [instrumentQuery, setInstrumentQuery] = useState("");
   const [instrumentMatches, setInstrumentMatches] = useState<Instrument[]>([]);
   const [watchlistBusy, setWatchlistBusy] = useState(false);
+  const [markingSeen, setMarkingSeen] = useState(false);
 
   async function loadDashboard(symbols = WATCHLIST) {
     const requestedSymbols = symbols.length > 0 ? symbols : WATCHLIST;
@@ -153,6 +154,7 @@ function App() {
     try {
       setLoading(true);
       setError(null);
+
       await selectScenario(scenario);
       setSelectedScenario(scenario);
 
@@ -171,15 +173,47 @@ function App() {
     }
   }
 
+  async function handleMarkAllSeen() {
+    try {
+      setMarkingSeen(true);
+      setCheckStatus(null);
+      setError(null);
+
+      await markChecked();
+
+      await loadDashboard(
+        watchlist && watchlist.items.length > 0
+          ? watchlist.items.map((item) => item.instrument.symbol)
+          : WATCHLIST,
+      );
+
+      setCheckStatus(
+        "You're caught up. We'll show you what's new next time.",
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to mark changes as seen.",
+      );
+    } finally {
+      setMarkingSeen(false);
+    }
+  }
+
   async function createSavedWatchlist() {
     try {
       setWatchlistBusy(true);
+
       const created = await createWatchlist("My Watchlist");
+
       setWatchlist(created);
       setCheckStatus("Saved watchlist created. Search to add companies.");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to create watchlist.",
+        err instanceof Error
+          ? err.message
+          : "Unable to create watchlist.",
       );
     } finally {
       setWatchlistBusy(false);
@@ -210,9 +244,11 @@ function App() {
 
     try {
       setWatchlistBusy(true);
+
       await operation();
 
       const refreshed = await getWatchlist(watchlist.id);
+
       setWatchlist(refreshed);
       setInstrumentMatches([]);
       setInstrumentQuery("");
@@ -222,7 +258,9 @@ function App() {
       );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to update watchlist.",
+        err instanceof Error
+          ? err.message
+          : "Unable to update watchlist.",
       );
     } finally {
       setWatchlistBusy(false);
@@ -299,6 +337,7 @@ function App() {
         <div className="error-banner">
           <strong>Couldn't refresh market data.</strong>
           <span>{error}</span>
+
           <button onClick={() => void loadDashboard()}>
             Retry
           </button>
@@ -306,16 +345,22 @@ function App() {
       )}
 
       {checkStatus && (
-        <div className="check-status">{checkStatus}</div>
+        <div className="check-status">
+          {checkStatus}
+        </div>
       )}
 
       <section
         className="scenario-control"
         aria-label="Demo scenario"
       >
-        <span className="demo-feed-label">Demo market feed</span>
+        <span className="demo-feed-label">
+          Demo market feed
+        </span>
 
-        <label htmlFor="scenario-select">Scenario</label>
+        <label htmlFor="scenario-select">
+          Scenario
+        </label>
 
         <select
           id="scenario-select"
@@ -355,6 +400,19 @@ function App() {
           </span>
 
           <small>since your last check</small>
+
+          {newMeaningfulChanges.length > 0 && (
+            <button
+              className="mark-seen-button"
+              type="button"
+              onClick={() => void handleMarkAllSeen()}
+              disabled={markingSeen}
+            >
+              {markingSeen
+                ? "Saving..."
+                : "Mark all as seen"}
+            </button>
+          )}
         </div>
       </section>
 
@@ -362,8 +420,10 @@ function App() {
         <div className="section-heading">
           <div>
             <h2>Worth your attention</h2>
+
             <p>
-              Changes supported by the strongest current evidence.
+              Changes supported by the strongest current
+              evidence.
             </p>
           </div>
         </div>
@@ -371,8 +431,12 @@ function App() {
         {meaningfulChanges.length === 0 ? (
           <div className="empty-card">
             <div className="empty-icon">✓</div>
+
             <h3>Nothing meaningful changed</h3>
-            <p>You&apos;re caught up with your watchlist.</p>
+
+            <p>
+              You&apos;re caught up with your watchlist.
+            </p>
           </div>
         ) : (
           <div className="attention-grid">
@@ -455,6 +519,7 @@ function App() {
 
                   <div className="card-footer">
                     <span>View evidence</span>
+
                     <strong aria-hidden="true">
                       &rarr;
                     </strong>
@@ -470,7 +535,10 @@ function App() {
         <div className="section-heading">
           <div>
             <h2>Your watchlist</h2>
-            <p>Every company you&apos;re monitoring.</p>
+
+            <p>
+              Every company you&apos;re monitoring.
+            </p>
           </div>
 
           <span className="watch-count">
@@ -521,8 +589,14 @@ function App() {
                         )
                       }
                     >
-                      <strong>{instrument.symbol}</strong>
-                      <span>{instrument.companyName}</span>
+                      <strong>
+                        {instrument.symbol}
+                      </strong>
+
+                      <span>
+                        {instrument.companyName}
+                      </span>
+
                       <em>Add</em>
                     </button>
                   ))}
@@ -587,9 +661,7 @@ function App() {
                       event.key === " "
                     ) {
                       event.preventDefault();
-                      setSelectedSymbol(
-                        quote.symbol,
-                      );
+                      setSelectedSymbol(quote.symbol);
                     }
                   }}
                 >
@@ -657,8 +729,7 @@ function App() {
                             const symbols =
                               watchlist.items.map(
                                 (item) =>
-                                  item.instrument
-                                    .symbol,
+                                  item.instrument.symbol,
                               );
 
                             [
@@ -686,8 +757,7 @@ function App() {
                           disabled={
                             watchlistBusy ||
                             position ===
-                              watchlist.items.length -
-                                1
+                              watchlist.items.length - 1
                           }
                           onClick={(event) => {
                             event.stopPropagation();
@@ -695,8 +765,7 @@ function App() {
                             const symbols =
                               watchlist.items.map(
                                 (item) =>
-                                  item.instrument
-                                    .symbol,
+                                  item.instrument.symbol,
                               );
 
                             [
@@ -762,6 +831,7 @@ function App() {
 
       <footer className="data-footer">
         <span>● Demo market feed</span>
+
         <span>
           Data designed for hackathon demonstration
         </span>
@@ -772,9 +842,7 @@ function App() {
         selectedAttention && (
           <div
             className="modal-backdrop"
-            onClick={() =>
-              setSelectedSymbol(null)
-            }
+            onClick={() => setSelectedSymbol(null)}
           >
             <div
               className="detail-modal"
@@ -802,11 +870,9 @@ function App() {
                   </span>
 
                   <h2 id="detail-title">
-                    {
-                      COMPANY_NAMES[
-                        selectedQuote.symbol
-                      ]
-                    }
+                    {COMPANY_NAMES[
+                      selectedQuote.symbol
+                    ]}
                   </h2>
                 </div>
 
@@ -829,15 +895,12 @@ function App() {
 
               <div className="detail-price">
                 <strong>
-                  {formatPrice(
-                    selectedQuote.price,
-                  )}
+                  {formatPrice(selectedQuote.price)}
                 </strong>
 
                 <span
                   className={
-                    selectedQuote.percentageChange >=
-                    0
+                    selectedQuote.percentageChange >= 0
                       ? "positive"
                       : "negative"
                   }
