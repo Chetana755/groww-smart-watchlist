@@ -80,6 +80,18 @@ function dataStatusLabel(status: string) {
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
+async function getCurrentScenario(): Promise<DemoScenario> {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
+  const response = await fetch(`${baseUrl}/demo/scenario`);
+
+  if (!response.ok) {
+    throw new Error("Unable to load the saved demo scenario.");
+  }
+
+  const data = (await response.json()) as { scenario: DemoScenario };
+  return data.scenario;
+}
+
 function App() {
   const [quotes, setQuotes] = useState<MarketQuote[]>([]);
   const [attention, setAttention] = useState<AttentionResponse[]>([]);
@@ -123,11 +135,39 @@ function App() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadDashboard();
-    }, 0);
+    let cancelled = false;
 
-    return () => window.clearTimeout(timer);
+    async function initializeDashboard() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Load the persisted scenario BEFORE loading market data.
+        // This prevents the UI from briefly starting on NORMAL_DAY after
+        // a refresh when the user previously selected another scenario.
+        const savedScenario = await getCurrentScenario();
+
+        if (cancelled) return;
+
+        setSelectedScenario(savedScenario);
+        await loadDashboard();
+      } catch (err) {
+        if (cancelled) return;
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to initialize the dashboard.",
+        );
+        setLoading(false);
+      }
+    }
+
+    void initializeDashboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -327,7 +367,18 @@ function App() {
 
         <button
           className="refresh-button"
-          onClick={() => void loadDashboard()}
+          onClick={() => {
+            void (async () => {
+              try {
+                const savedScenario = await getCurrentScenario();
+                setSelectedScenario(savedScenario);
+              } catch {
+                // Keep the current selector value if the scenario endpoint
+                // is temporarily unavailable; market refresh can still run.
+              }
+              await loadDashboard();
+            })();
+          }}
         >
           ↻ Refresh
         </button>
